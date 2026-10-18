@@ -1,0 +1,680 @@
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chuỗi Ngày Sống Xanh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; }
+        /* Ẩn thanh cuộn nhưng vẫn cho phép cuộn */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .glass-nav { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="text-gray-800 antialiased flex justify-center">
+
+    <!-- Mobile Container -->
+    <div id="app-container" class="w-full max-w-md bg-white min-h-screen shadow-2xl relative flex flex-col overflow-hidden">
+        
+        <!-- Header & Progress Bar -->
+        <header class="bg-green-600 text-white pt-6 pb-4 px-4 shadow-md z-10 rounded-b-2xl relative">
+            <h1 class="text-xl font-bold text-center mb-3">🌿 Chuỗi Ngày Sống Xanh</h1>
+            <div class="flex justify-between text-xs mb-1 font-medium">
+                <span>Tiến độ hôm nay</span>
+                <span id="progress-text">0/10 Hoàn thành</span>
+            </div>
+            <div class="w-full bg-green-800/40 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-white h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+            <!-- User Info Badge -->
+            <div class="absolute top-4 right-4 bg-white/20 px-2 py-1 rounded-lg text-xs flex items-center gap-1 backdrop-blur-sm">
+                <span id="header-avatar">👤</span>
+                <span id="header-points" class="font-bold">0đ</span>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto no-scrollbar pb-24 relative bg-slate-50">
+            
+            <!-- TAB 1: NHIỆM VỤ -->
+            <section id="tab-tasks" class="tab-content active p-4 space-y-3">
+                <div class="mb-4">
+                    <h2 class="text-lg font-bold text-gray-800">Nhiệm vụ ngày <span id="current-date-display" class="text-green-600"></span></h2>
+                    <p class="text-sm text-gray-500">Hoàn thành để tích điểm và leo top!</p>
+                </div>
+                <div id="tasks-list" class="space-y-3">
+                    <!-- Tasks will be rendered here -->
+                    <div class="animate-pulse flex space-x-4 p-4 border rounded-xl bg-white">
+                        <div class="rounded-full bg-slate-200 h-10 w-10"></div>
+                        <div class="flex-1 space-y-2 py-1">
+                            <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                            <div class="h-3 bg-slate-200 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: BẢNG VÀNG -->
+            <section id="tab-leaderboard" class="tab-content p-4">
+                <div class="mb-4 text-center">
+                    <h2 class="text-2xl font-bold text-amber-500 flex items-center justify-center gap-2">🏆 BẢNG VÀNG 🏆</h2>
+                    <p class="text-sm text-gray-500">Những chiến thần bảo vệ môi trường</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <ul id="leaderboard-list" class="divide-y divide-gray-100">
+                        <!-- Leaderboard items -->
+                    </ul>
+                </div>
+            </section>
+
+            <!-- TAB 3: HỒ SƠ -->
+            <section id="tab-profile" class="tab-content p-4">
+                <h2 class="text-xl font-bold mb-6 text-center text-gray-800">Hồ Sơ Của Bạn</h2>
+                
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col items-center">
+                    <div id="profile-current-avatar" class="text-6xl mb-4 bg-green-50 p-4 rounded-full border-4 border-green-100">👤</div>
+                    <div class="w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tên hiển thị (Tối đa 15 ký tự)</label>
+                        <input type="text" id="profile-name-input" maxlength="15" class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors" placeholder="Ví dụ: EcoHero_123">
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Chọn Avatar Mới</h3>
+                    <div class="grid grid-cols-5 gap-3" id="avatar-grid">
+                        <!-- Avatars -->
+                    </div>
+                </div>
+                
+                <button id="btn-save-profile" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-200 active:scale-95 transition-transform">
+                    Lưu Thay Đổi
+                </button>
+            </section>
+
+            <!-- TAB 4: ADMIN -->
+            <section id="tab-admin" class="tab-content p-4">
+                <div id="admin-login-section" class="flex flex-col items-center justify-center mt-10 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="text-4xl mb-4">🔐</div>
+                    <h2 class="text-lg font-bold mb-4">Khu Vực Ban Tổ Chức</h2>
+                    <input type="password" id="admin-pwd" placeholder="Nhập mật khẩu..." class="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-center focus:ring-2 focus:ring-green-500 outline-none">
+                    <button id="btn-admin-login" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl active:scale-95 transition-transform">Đăng Nhập</button>
+                </div>
+
+                <div id="admin-dashboard" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-800">Danh sách chờ duyệt</h2>
+                        <button id="btn-admin-logout" class="text-sm text-red-500 font-medium">Thoát</button>
+                    </div>
+                    <div id="admin-pending-list" class="space-y-3">
+                        <!-- Pending tasks -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="absolute bottom-0 w-full glass-nav border-t border-gray-200 flex justify-around pb-safe pt-2 pb-2 z-20">
+            <button class="nav-btn flex flex-col items-center p-2 text-green-600 w-16" data-target="tab-tasks">
+                <span class="text-xl mb-1">📝</span>
+                <span class="text-[10px] font-medium">Nhiệm vụ</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center p-2 text-gray-400 w-16" data-target="tab-leaderboard">
+                <span class="text-xl mb-1">🏆</span>
+                <span class="text-[10px] font-medium">Bảng vàng</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center p-2 text-gray-400 w-16" data-target="tab-profile">
+                <span class="text-xl mb-1">👤</span>
+                <span class="text-[10px] font-medium">Hồ sơ</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center p-2 text-gray-400 w-16" data-target="tab-admin">
+                <span class="text-xl mb-1">⚙️</span>
+                <span class="text-[10px] font-medium">Admin</span>
+            </button>
+        </nav>
+
+        <!-- Upload Modal (Hidden by default) -->
+        <div id="upload-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex flex-col justify-end opacity-0 transition-opacity duration-300">
+            <div class="bg-white w-full max-w-md mx-auto rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300" id="upload-modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-800" id="modal-task-title">Tên nhiệm vụ</h3>
+                    <button id="btn-close-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+                <p class="text-sm text-gray-600 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100" id="modal-task-req">Yêu cầu nhiệm vụ...</p>
+                
+                <div class="mb-6">
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <span class="text-3xl mb-2">📸</span>
+                            <p class="text-sm text-gray-500 font-medium" id="file-name-display">Nhấn để chọn ảnh/video</p>
+                        </div>
+                        <input id="file-input" type="file" accept="image/*,video/*" class="hidden" />
+                    </label>
+                </div>
+                
+                <button id="btn-submit-proof" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl disabled:bg-gray-400 disabled:cursor-not-allowed active:scale-95 transition-all">
+                    Nộp Minh Chứng
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom Alert Modal -->
+        <div id="custom-alert" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center opacity-0 transition-opacity duration-200">
+            <div class="bg-white p-6 rounded-2xl max-w-[80%] w-full text-center shadow-2xl transform scale-95 transition-transform duration-200" id="custom-alert-box">
+                <div id="alert-icon" class="text-4xl mb-3">ℹ️</div>
+                <h3 id="alert-title" class="text-lg font-bold mb-2">Thông báo</h3>
+                <p id="alert-message" class="text-gray-600 mb-5 text-sm">Nội dung</p>
+                <button id="btn-close-alert" class="bg-gray-800 text-white px-6 py-2 rounded-lg font-medium w-full active:scale-95">Đóng</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDK Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment Variables Handling
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'green-streak-demo-' + Math.floor(Math.random()*1000);
+        const fbConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Fallback for local testing if needed, but primarily relies on injected config
+            projectId: "demo-project",
+        };
+
+        // Rule 1: Strict Paths
+        const usersCollectionPath = `artifacts/${appId}/public/data/users`;
+        const submissionsCollectionPath = `artifacts/${appId}/public/data/submissions`;
+
+        // Initialize Firebase
+        const app = initializeApp(fbConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // State Variables
+        let currentUserUid = null;
+        let allUsers = [];
+        let allSubmissions = [];
+        let selectedTaskIdForUpload = null;
+        let selectedFileMockName = null;
+        let isAdminLoggedIn = false;
+
+        // Constants Data
+        const AVATARS = ['🐼', '🐸', '🐢', '🦋', '🐝', '🐞', '🐙', '🐒', '🐥', '🦖'];
+        const TASKS = [
+            { id: 't1', title: 'Chiến thần rút chốt', points: 20, req: 'Quay video (10s) rút 8 phích cắm điện khác nhau.', icon: '🔌' },
+            { id: 't2', title: 'Phong ấn lôi thần', points: 10, req: 'Quay video (10s) tắt 5 công tắc điện.', icon: '⚡' },
+            { id: 't3', title: 'Thực thần càng quét', points: 10, req: 'Chụp 1 ảnh: Vét sạch đồ ăn trên đĩa.', icon: '🍽️' },
+            { id: 't4', title: 'Thủy bình độc bản', points: 30, req: 'Chụp 1 ảnh: Dùng bình/ly cá nhân mua nước, không dùng ly nhựa.', icon: '🥤' },
+            { id: 't5', title: 'Căng hải vào việc', points: 20, req: 'Quay video (10s) đi bộ thay vì đi xe máy.', icon: '🚶' },
+            { id: 't6', title: 'Túi/Balo vạn năng', points: 30, req: 'Chụp 1 ảnh tại cửa hàng: Mang túi/balo riêng đựng đồ.', icon: '🛍️' },
+            { id: 't7', title: 'Khai mở phong môn', points: 10, req: 'Ghép 1 ảnh từ 4 ảnh mở 4 cánh cửa sổ khác nhau.', icon: '🪟' },
+            { id: 't8', title: 'Cấp thủy dưỡng mộc', points: 10, req: 'Quay video (5s) tưới cây.', icon: '🌱' },
+            { id: 't9', title: 'Thanh trừng rác thải', points: 10, req: 'Chụp 1 ảnh vứt rác đúng nơi quy định.', icon: '🗑️' },
+            { id: 't10', title: 'Độ lại đồ phế', points: 50, req: 'Chụp 1 ảnh tái chế 1 sản phẩm có tính ứng dụng.', icon: '♻️' }
+        ];
+
+        // Utility: Get Today Date String (YYYY-MM-DD) based on local timezone
+        const getTodayString = () => {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        // Utility: Custom Alert
+        const showAlert = (title, message, icon = 'ℹ️') => {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = message;
+            document.getElementById('alert-icon').innerText = icon;
+            const modal = document.getElementById('custom-alert');
+            const box = document.getElementById('custom-alert-box');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+        };
+        document.getElementById('btn-close-alert').addEventListener('click', () => {
+            const modal = document.getElementById('custom-alert');
+            const box = document.getElementById('custom-alert-box');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        });
+
+        // ---------------- AUTHENTICATION (Rule 3) ----------------
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUserUid = auth.currentUser.uid;
+                await initUserDoc();
+                setupRealtimeListeners();
+            } catch (error) {
+                console.error("Auth Error:", error);
+                showAlert("Lỗi Đăng Nhập", "Không thể kết nối hệ thống. Vui lòng thử lại sau.", "❌");
+            }
+        };
+
+        const initUserDoc = async () => {
+            if (!currentUserUid) return;
+            const userRef = doc(db, usersCollectionPath, currentUserUid);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) {
+                // Tự động tạo hồ sơ mặc định
+                const defaultName = `EcoHero_${currentUserUid.substring(0, 4)}`;
+                const randomAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+                await setDoc(userRef, {
+                    name: defaultName,
+                    avatar: randomAvatar,
+                    totalPoints: 0,
+                    createdAt: Date.now()
+                });
+            }
+        };
+
+        // ---------------- REALTIME LISTENERS (Rule 2) ----------------
+        const setupRealtimeListeners = () => {
+            // Listen to ALL Users for Leaderboard and Data Joining
+            onSnapshot(collection(db, usersCollectionPath), (snapshot) => {
+                allUsers = [];
+                snapshot.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+                
+                // Update header info for current user
+                const me = allUsers.find(u => u.id === currentUserUid);
+                if (me) {
+                    document.getElementById('header-avatar').innerText = me.avatar || '👤';
+                    document.getElementById('header-points').innerText = `${me.totalPoints || 0}đ`;
+                    
+                    // Update Profile form if we are on that tab
+                    document.getElementById('profile-name-input').value = me.name;
+                    document.getElementById('profile-current-avatar').innerText = me.avatar;
+                    renderAvatarGrid(me.avatar);
+                }
+                
+                renderLeaderboard();
+                if (isAdminLoggedIn) renderAdminView(); // Update admin view if names change
+            }, (error) => console.error("Users Listener Error:", error));
+
+            // Listen to ALL Submissions
+            onSnapshot(collection(db, submissionsCollectionPath), (snapshot) => {
+                allSubmissions = [];
+                snapshot.forEach(doc => allSubmissions.push({ id: doc.id, ...doc.data() }));
+                
+                renderTasks();
+                if (isAdminLoggedIn) renderAdminView();
+            }, (error) => console.error("Submissions Listener Error:", error));
+        };
+
+        // ---------------- UI RENDERING ----------------
+
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Update active state of buttons
+                document.querySelectorAll('.nav-btn').forEach(b => {
+                    b.classList.remove('text-green-600');
+                    b.classList.add('text-gray-400');
+                });
+                const currentBtn = e.currentTarget;
+                currentBtn.classList.remove('text-gray-400');
+                currentBtn.classList.add('text-green-600');
+
+                // Switch content
+                const targetId = currentBtn.getAttribute('data-target');
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        // 1. Render Tasks (Home)
+        const renderTasks = () => {
+            if (!currentUserUid) return;
+            
+            const todayStr = getTodayString();
+            document.getElementById('current-date-display').innerText = new Date().toLocaleDateString('vi-VN');
+            
+            const taskContainer = document.getElementById('tasks-list');
+            taskContainer.innerHTML = '';
+            
+            // Lọc bộ nhớ: Lấy các submissions của user này trong ngày hôm nay
+            const myTodaySubmissions = allSubmissions.filter(s => s.userId === currentUserUid && s.date === todayStr);
+            
+            let completedCount = 0;
+
+            TASKS.forEach(task => {
+                // Tìm xem task này đã được nộp chưa
+                const submission = myTodaySubmissions.find(s => s.taskId === task.id);
+                
+                let statusUI = '';
+                let buttonUI = '';
+                let bgClass = 'bg-white';
+                let opacityClass = '';
+
+                if (!submission) {
+                    // Chưa làm
+                    buttonUI = `<button onclick="openUploadModal('${task.id}')" class="mt-2 text-sm bg-green-100 text-green-700 font-semibold px-4 py-1.5 rounded-lg active:scale-95 transition-transform w-full sm:w-auto">Thực hiện</button>`;
+                } else if (submission.status === 'pending') {
+                    // Chờ duyệt
+                    statusUI = `<span class="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-1 rounded-md ml-auto flex-shrink-0">⏳ Chờ duyệt</span>`;
+                    bgClass = 'bg-amber-50/30';
+                } else if (submission.status === 'approved') {
+                    // Hoàn thành
+                    statusUI = `<span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded-md ml-auto flex-shrink-0">✅ Hoàn thành</span>`;
+                    bgClass = 'bg-green-50/50';
+                    opacityClass = 'opacity-70';
+                    completedCount++;
+                } else if (submission.status === 'rejected') {
+                    // Bị từ chối
+                    statusUI = `<span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded-md ml-auto flex-shrink-0">❌ Bị từ chối</span>`;
+                    buttonUI = `<button onclick="openUploadModal('${task.id}')" class="mt-2 text-sm bg-red-600 text-white font-semibold px-4 py-1.5 rounded-lg active:scale-95 transition-transform w-full sm:w-auto">Nộp lại</button>`;
+                }
+
+                const cardHtml = `
+                    <div class="flex p-4 border border-gray-100 rounded-2xl shadow-sm ${bgClass} ${opacityClass} transition-colors">
+                        <div class="flex flex-col items-center justify-center bg-gray-50 rounded-xl h-14 w-14 mr-4 flex-shrink-0">
+                            <span class="text-2xl">${task.icon}</span>
+                            <span class="text-[10px] font-bold text-green-600 mt-1">${task.points}đ</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1 gap-2">
+                                <h3 class="font-bold text-gray-800 text-sm truncate">${task.title}</h3>
+                                ${statusUI}
+                            </div>
+                            <p class="text-xs text-gray-500 leading-snug mb-1">${task.req}</p>
+                            ${buttonUI}
+                        </div>
+                    </div>
+                `;
+                taskContainer.insertAdjacentHTML('beforeend', cardHtml);
+            });
+
+            // Update Progress Bar
+            const progressPercent = (completedCount / TASKS.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('progress-text').innerText = `${completedCount}/${TASKS.length} Hoàn thành`;
+        };
+
+        // 2. Upload Modal Logic
+        window.openUploadModal = (taskId) => {
+            selectedTaskIdForUpload = taskId;
+            selectedFileMockName = null;
+            const task = TASKS.find(t => t.id === taskId);
+            
+            document.getElementById('modal-task-title').innerText = task.title;
+            document.getElementById('modal-task-req').innerText = task.req;
+            document.getElementById('file-name-display').innerText = "Nhấn để chọn ảnh/video minh chứng";
+            document.getElementById('file-name-display').classList.remove('text-green-600', 'font-bold');
+            document.getElementById('file-input').value = ""; // Reset
+            
+            const btnSubmit = document.getElementById('btn-submit-proof');
+            btnSubmit.disabled = true;
+
+            const modal = document.getElementById('upload-modal');
+            const content = document.getElementById('upload-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('translate-y-full');
+            }, 10);
+        };
+
+        const closeUploadModal = () => {
+            const modal = document.getElementById('upload-modal');
+            const content = document.getElementById('upload-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                selectedTaskIdForUpload = null;
+            }, 300);
+        };
+
+        document.getElementById('btn-close-modal').addEventListener('click', closeUploadModal);
+
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Giả lập lưu file: Chỉ lấy tên file để hiển thị cho Admin thấy có đính kèm
+                selectedFileMockName = file.name;
+                const display = document.getElementById('file-name-display');
+                display.innerText = `Đã chọn: ${file.name.substring(0,20)}${file.name.length > 20 ? '...' : ''}`;
+                display.classList.add('text-green-600', 'font-bold');
+                document.getElementById('btn-submit-proof').disabled = false;
+            }
+        });
+
+        document.getElementById('btn-submit-proof').addEventListener('click', async () => {
+            if (!currentUserUid || !selectedTaskIdForUpload || !selectedFileMockName) return;
+            
+            const btn = document.getElementById('btn-submit-proof');
+            const origText = btn.innerText;
+            btn.innerText = "Đang nộp...";
+            btn.disabled = true;
+
+            try {
+                // Kiểm tra xem đã có submission bị rejected nào chưa để ghi đè hoặc tạo mới
+                const todayStr = getTodayString();
+                const existingSub = allSubmissions.find(s => s.userId === currentUserUid && s.taskId === selectedTaskIdForUpload && s.date === todayStr);
+                
+                const subData = {
+                    userId: currentUserUid,
+                    taskId: selectedTaskIdForUpload,
+                    date: todayStr,
+                    status: 'pending',
+                    proofName: selectedFileMockName, // Lưu tên file giả lập
+                    timestamp: Date.now()
+                };
+
+                if (existingSub) {
+                    await updateDoc(doc(db, submissionsCollectionPath, existingSub.id), subData);
+                } else {
+                    await addDoc(collection(db, submissionsCollectionPath), subData);
+                }
+
+                closeUploadModal();
+                showAlert("Thành công!", "Đã nộp minh chứng. Đang chờ Admin duyệt.", "✅");
+            } catch (error) {
+                console.error("Submit Error:", error);
+                showAlert("Lỗi", "Không thể nộp bài. Thử lại sau.", "❌");
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
+        });
+
+        // 3. Render Leaderboard
+        const renderLeaderboard = () => {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            
+            // Lọc và sắp xếp bộ nhớ
+            const sortedUsers = [...allUsers].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+            
+            if (sortedUsers.length === 0) {
+                list.innerHTML = '<p class="text-center py-6 text-gray-400">Chưa có ai tham gia.</p>';
+                return;
+            }
+
+            sortedUsers.forEach((user, index) => {
+                let rankIcon = `<span class="font-bold text-gray-400">#${index + 1}</span>`;
+                if (index === 0) rankIcon = '🥇';
+                if (index === 1) rankIcon = '🥈';
+                if (index === 2) rankIcon = '🥉';
+
+                const isMe = user.id === currentUserUid;
+                const bgClass = isMe ? 'bg-amber-50/50' : '';
+
+                list.insertAdjacentHTML('beforeend', `
+                    <li class="flex items-center p-4 ${bgClass} transition-colors">
+                        <div class="w-8 text-center text-xl mr-2">${rankIcon}</div>
+                        <div class="text-3xl mr-4 bg-white rounded-full p-1 shadow-sm border border-gray-50">${user.avatar || '👤'}</div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800 ${isMe ? 'text-amber-700' : ''}">${user.name} ${isMe ? '(Bạn)' : ''}</h4>
+                        </div>
+                        <div class="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                            ${user.totalPoints || 0}đ
+                        </div>
+                    </li>
+                `);
+            });
+        };
+
+        // 4. Profile Logic
+        const renderAvatarGrid = (currentAvatar) => {
+            const grid = document.getElementById('avatar-grid');
+            grid.innerHTML = '';
+            AVATARS.forEach(av => {
+                const isSelected = av === currentAvatar;
+                const selClass = isSelected ? 'ring-4 ring-green-500 bg-green-100 scale-110' : 'bg-gray-50 hover:bg-gray-100';
+                grid.insertAdjacentHTML('beforeend', `
+                    <div onclick="selectAvatar('${av}')" class="text-2xl cursor-pointer p-2 rounded-xl text-center transition-all ${selClass}">
+                        ${av}
+                    </div>
+                `);
+            });
+        };
+
+        window.selectAvatar = (av) => {
+            document.getElementById('profile-current-avatar').innerText = av;
+            renderAvatarGrid(av);
+        };
+
+        document.getElementById('btn-save-profile').addEventListener('click', async () => {
+            if (!currentUserUid) return;
+            const nameInput = document.getElementById('profile-name-input').value.trim();
+            const avatar = document.getElementById('profile-current-avatar').innerText;
+            
+            if (!nameInput) return showAlert("Lỗi", "Tên không được để trống!", "⚠️");
+            
+            const btn = document.getElementById('btn-save-profile');
+            btn.disabled = true;
+            btn.innerText = "Đang lưu...";
+
+            try {
+                await updateDoc(doc(db, usersCollectionPath, currentUserUid), {
+                    name: nameInput,
+                    avatar: avatar
+                });
+                showAlert("Thành công!", "Đã cập nhật hồ sơ.", "✅");
+            } catch (error) {
+                showAlert("Lỗi", "Không thể cập nhật. Thử lại sau.", "❌");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Lưu Thay Đổi";
+            }
+        });
+
+        // 5. Admin Logic
+        document.getElementById('btn-admin-login').addEventListener('click', () => {
+            const pwd = document.getElementById('admin-pwd').value;
+            if (pwd === "adminvippro1102") {
+                isAdminLoggedIn = true;
+                document.getElementById('admin-login-section').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                document.getElementById('admin-pwd').value = '';
+                renderAdminView();
+            } else {
+                showAlert("Truy cập từ chối", "Sai mật khẩu Admin!", "⛔");
+            }
+        });
+
+        document.getElementById('btn-admin-logout').addEventListener('click', () => {
+            isAdminLoggedIn = false;
+            document.getElementById('admin-login-section').classList.remove('hidden');
+            document.getElementById('admin-dashboard').classList.add('hidden');
+        });
+
+        const renderAdminView = () => {
+            if (!isAdminLoggedIn) return;
+            const list = document.getElementById('admin-pending-list');
+            list.innerHTML = '';
+
+            // Lọc bộ nhớ: Lấy tất cả submissions có status 'pending'
+            const pendingSubs = allSubmissions.filter(s => s.status === 'pending').sort((a,b) => b.timestamp - a.timestamp);
+
+            if (pendingSubs.length === 0) {
+                list.innerHTML = '<div class="text-center p-6 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-200">Không có nhiệm vụ nào cần duyệt.🎉</div>';
+                return;
+            }
+
+            pendingSubs.forEach(sub => {
+                const user = allUsers.find(u => u.id === sub.userId) || { name: 'Unknown', avatar: '👤' };
+                const task = TASKS.find(t => t.id === sub.taskId);
+                if (!task) return;
+
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span>${user.avatar}</span>
+                                <span class="font-bold text-gray-800">${user.name}</span>
+                            </div>
+                            <span class="text-xs text-gray-400">${new Date(sub.timestamp).toLocaleTimeString('vi-VN')}</span>
+                        </div>
+                        
+                        <div>
+                            <div class="font-bold text-green-700 text-sm mb-1">${task.title} (+${task.points}đ)</div>
+                            <div class="text-xs text-gray-500 mb-2">${task.req}</div>
+                            
+                            <!-- Giả lập hiển thị file đính kèm -->
+                            <div class="bg-blue-50 border border-blue-100 rounded-lg p-2 flex items-center gap-2 text-sm text-blue-700">
+                                <span>📎</span>
+                                <span class="truncate italic">${sub.proofName || 'Đã đính kèm file (Giả lập)'}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="adminAction('${sub.id}', '${sub.userId}', ${task.points}, 'approve')" class="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold active:scale-95 transition-transform text-sm">✅ Duyệt</button>
+                            <button onclick="adminAction('${sub.id}', null, null, 'reject')" class="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold active:scale-95 transition-transform text-sm">❌ Từ chối</button>
+                        </div>
+                    </div>
+                `);
+            });
+        };
+
+        window.adminAction = async (subId, userId, points, action) => {
+            try {
+                if (action === 'approve') {
+                    // 1. Cập nhật status submission
+                    await updateDoc(doc(db, submissionsCollectionPath, subId), { status: 'approved' });
+                    
+                    // 2. Cộng điểm cho User
+                    const userRef = doc(db, usersCollectionPath, userId);
+                    const userDoc = await getDoc(userRef);
+                    if (userDoc.exists()) {
+                        const currentPoints = userDoc.data().totalPoints || 0;
+                        await updateDoc(userRef, { totalPoints: currentPoints + points });
+                    }
+                } else if (action === 'reject') {
+                    await updateDoc(doc(db, submissionsCollectionPath, subId), { status: 'rejected' });
+                }
+            } catch (error) {
+                console.error("Admin Action Error:", error);
+                showAlert("Lỗi", "Không thể thực hiện thao tác.", "❌");
+            }
+        };
+
+        // Bootstrap App
+        window.addEventListener('DOMContentLoaded', () => {
+            initAuth();
+        });
+
+    </script>
+</body>
+</html>
+```
